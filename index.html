@@ -37,7 +37,7 @@
   }
   .form-group { margin-bottom: 14px; }
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #334155; }
-  input[type="text"], input[type="tel"], textarea {
+  input[type="text"], input[type="tel"], textarea, select {
     width: 100%;
     padding: 12px 14px;
     border: 1.5px solid var(--border);
@@ -48,9 +48,13 @@
     background: #fff;
     font-family: inherit;
   }
-  input:focus, textarea:focus { border-color: var(--primary); }
+  input:focus, textarea:focus, select:focus { border-color: var(--primary); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  #layoutPreset { margin-bottom: 8px; }
+  @media (max-width: 520px) {
+    .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  }
   .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .tag-btn {
     border: 1px solid var(--border);
@@ -116,7 +120,19 @@
       <div class="form-group"><label>開價 (萬元)</label><input type="text" id="price" placeholder="例：2380"></div>
     </div>
     <div class="grid-3">
-      <div class="form-group"><label>格局</label><input type="text" id="layout" placeholder="例：2房2廳1衛"></div>
+      <div class="form-group"><label for="layoutPreset">格局快速選擇（選填）</label>
+        <select id="layoutPreset" onchange="applyLayoutPreset()">
+          <option value="">不選擇</option>
+          <option>套房</option>
+          <option>1房1廳1衛</option>
+          <option>2房1廳1衛</option>
+          <option>2房2廳1衛</option>
+          <option>3房2廳2衛</option>
+          <option>4房2廳2衛</option>
+          <option value="custom">自行輸入</option>
+        </select>
+        <label for="layout">格局（可自由修改）</label>
+        <input type="text" id="layout" placeholder="例：2房2廳1衛" oninput="syncLayoutPreset()"></div>
       <div class="form-group"><label>總建坪</label><input type="text" id="ping" placeholder="例：28.5坪"></div>
       <div class="form-group"><label>樓層/總樓高</label><input type="text" id="floor" placeholder="例：12F/38F"></div>
     </div>
@@ -160,6 +176,19 @@ let copies = [];
 let currentTabIndex = 0;
 let copyRequest = 0;
 
+function applyLayoutPreset() {
+  const preset = document.getElementById('layoutPreset').value;
+  // 自行輸入或不選擇都保留目前文字；只有常用格局會填入。
+  if (preset && preset !== 'custom') document.getElementById('layout').value = preset;
+}
+
+function syncLayoutPreset() {
+  const preset = document.getElementById('layoutPreset');
+  const value = document.getElementById('layout').value.trim();
+  preset.value = !value ? '' : Array.from(preset.options).some(option =>
+    option.value !== 'custom' && option.value === value) ? value : 'custom';
+}
+
 function toggleTag(el, text) {
   el.classList.toggle('active');
   if (el.classList.contains('active')) {
@@ -173,6 +202,7 @@ function fillDemo() {
   document.getElementById('title').value = '【示範】捷運景觀兩房（非真實物件）';
   document.getElementById('price').value = '2380';
   document.getElementById('layout').value = '2房2廳1衛1陽台';
+  syncLayoutPreset();
   document.getElementById('ping').value = '28.6坪';
   document.getElementById('floor').value = '18F / 46F';
   document.getElementById('features').value = '【示範資料】附坡道平面車位；實際條件請核對。';
