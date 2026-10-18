@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>房仲神隊友｜一鍵多平台文案轉換機</title>
 <style>
   :root {
@@ -106,13 +106,13 @@
   <header>
     <h1>🏠 房仲一鍵文案神器</h1>
     <div class="subtitle">填一次資料 ➔ 自動生成【FB爆款 / 591規格 / LINE推坑 / IG吸睛】</div>
+  <p class="subtitle">本機模板工具，非 AI；不會傳送資料至外部服務。刊登前請核對價格、坪數、屋況與廣告必要資訊。</p>
   </header>
   <div class="card"
     >
     <div class="demo-fill"><a onclick="fillDemo()">⚡ 帶入示範物件</a></div>
     <div class="grid-2">
-      <div class="form-group"><label>社區/案名/地段</label><input type="text" id="title
-                                     " placeholder="例：新巨蛋、近府中捷運"></div>
+      <div class="form-group"><label>社區/案名/地段</label><input type="text" id="title" placeholder="例：新巨蛋、近府中捷運"></div>
       <div class="form-group"><label>開價 (萬元)</label><input type="text" id="price" placeholder="例：2380"></div>
     </div>
     <div class="grid-3">
@@ -121,14 +121,14 @@
       <div class="form-group"><label>樓層/總樓高</label><input type="text" id="floor" placeholder="例：12F/38F"></div>
     </div>
     <div class="form-group">
-      <label>必殺賣點（點擊快速加入）</label>
+      <label>物件特色（僅勾選已確認的事實）</label>
       <div class="tags-wrapper">
         <span class="tag-btn" onclick="toggleTag(this, '捷運共構秒到站')">🚇 捷運共構</span>
-        <span class="tag-btn" onclick="toggleTag(this, '屋主換屋誠意出售')">🤝 屋主誠售</span>
+        <span class="tag-btn" onclick="toggleTag(this, '屋主誠意出售')">🤝 屋主誠售</span>
         <span class="tag-btn" onclick="toggleTag(this, '高樓景觀邊間採光')">☀️ 景觀採光</span>
         <span class="tag-btn" onclick="toggleTag(this, '稀有釋出動作要快')">🔥 稀有釋出</span>
         <span class="tag-btn" onclick="toggleTag(this, '精美裝潢可直接入住')">🛋️ 精美裝潢</span>
-        <span class="tag-btn" onclick="toggleTag(this, '低總價新青安首選')">💰 新青安首選</span>
+        <span class="tag-btn" onclick="toggleTag(this, '貸款條件請另行洽詢')">💰 貸款洽詢</span>
       </div>
     </div>
     <div class="form-group"><label>其他備註特色</label><textarea id="features" rows="2" placeholder="例：坡道平面大車位、近學區生活機能極佳"></textarea></div>
@@ -145,16 +145,20 @@
       <button class="tab-btn" onclick="switchTab(2)">💬 LINE 推坑</button>
       <button class="tab-btn" onclick="switchTab(3)">📸 IG吸睛短文</button>
     </div>
+    <p class="subtitle">以下為模板草稿，刊登前請核對；示範資料不代表真實待售物件。</p>
+    <button onclick="window.print()">🖨️ 列印 / 儲存 PDF</button>
     <div class="output-box">
       <pre class="output-text" id="outputText"></pre>
       <button class="btn-copy" id="copyBtn" onclick="copyResult()">📋 複製此文案</button>
     </div>
+    <p id="copyStatus" class="subtitle" role="status" aria-live="polite"></p>
   </div>
 </div>                  
   <script>
 let selectedTags = [];
 let copies = [];
 let currentTabIndex = 0;
+let copyRequest = 0;
 
 function toggleTag(el, text) {
   el.classList.toggle('active');
@@ -166,58 +170,55 @@ function toggleTag(el, text) {
 }
 
 function fillDemo() {
-  document.getElementById('title').value = '新巨蛋捷運共構超美高樓兩房';
+  document.getElementById('title').value = '【示範】捷運景觀兩房（非真實物件）';
   document.getElementById('price').value = '2380';
   document.getElementById('layout').value = '2房2廳1衛1陽台';
   document.getElementById('ping').value = '28.6坪';
   document.getElementById('floor').value = '18F / 46F';
-  document.getElementById('features').value = '附坡道平面車位、新婚首購首選、收租投報率佳、出站即到家！';
-  document.getElementById('agentName').value = '板橋買房推薦 阿宏';
-  document.getElementById('contact').value = '0988-123-456 (LINE: honghouse)';
-  document.querySelectorAll('.tag-btn').forEach(btn => {
-    if (btn.innerText.includes('捷運') || btn.innerText.includes('景觀') || btn.innerText.includes('屋主')) {
-      if (!btn.classList.contains('active')) btn.click();
-    }
-  });
+  document.getElementById('features').value = '【示範資料】附坡道平面車位；實際條件請核對。';
+  document.getElementById('agentName').value = '示範業務';
+  document.getElementById('contact').value = '請填入您的聯絡方式';
+  
+  selectedTags = [];
+  document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
 }
 
 function generateAll() {
-  const title = document.getElementById('title').value.trim() || '優質稀有美物件';
+  const title = document.getElementById('title').value.trim() || '物件名稱未提供';
   const price = document.getElementById('price').value.trim();
-  const priceStr = price ? `${price} 萬` : '屋主誠意價 歡迎洽詢';
-  const layout = document.getElementById('layout').value.trim() || '依現況';
-  const ping = document.getElementById('ping').value.trim() || '依權狀';
-  const floor = document.getElementById('floor').value.trim() || '高樓層';
+  const priceStr = price ? `${price} 萬` : '未提供，歡迎洽詢';
+  const layout = document.getElementById('layout').value.trim() || '未提供';
+  const ping = document.getElementById('ping').value.trim() || '未提供';
+  const floor = document.getElementById('floor').value.trim() || '未提供';
   const customFeatures = document.getElementById('features').value.trim();
-  const agent = document.getElementById('agentName').value.trim() || '專案經紀人';
-  const contact = document.getElementById('contact').value.trim() || '私訊洽詢';
+  const agent = document.getElementById('agentName').value.trim() || '聯絡人未提供';
+  const contact = document.getElementById('contact').value.trim() || '聯絡方式未提供，請補填';
 
   const allTags = [...selectedTags];
   if (customFeatures) allTags.push(customFeatures);
-  const tagListStr = allTags.map(t => `✅ ${t}`).join('
-');
+  const tagListStr = allTags.map(t => `✅ ${t}`).join('\n');
 
-  const fbCopy = `🔥【屋主決心要賣！降價通知・錯過不再】🔥
+  // 1. FB 社團爆款版 (吸睛、痛點、表情符號、標籤豐富)
+  const fbCopy = `🏠【物件資訊分享】
 ━━━━━━━━━━━━━━━━━━━━━
 📍 物件名稱：${title}
-💰 震撼開價：${priceStr}（勇敢出價，我幫你談！）
+💰 開價：${priceStr}
 📐 權狀坪數：${ping}
 🛏 格局規劃：${layout}
 🏢 樓層位置：${floor}
 
 【為什麼這間值得你親自來看？】
-${tagListStr || '✅ 屋況極佳 免大整理
-✅ 地段保值 生活機能成熟'}
+${tagListStr || '特色未提供，歡迎洽詢'}
 
-屋主因生涯規劃換屋，這間起家厝真的顧得很好！
-現場看光線跟通風比照片好太多，同行都在帶看了，慢了只能恭喜別人！
+想進一步了解物件條件，歡迎洽詢並預約現場確認。
 
 ━━━━━━━━━━━━━━━━━━━━━
 📲 預約帶看專線：${contact}
 👤 服務經紀人：${agent}
 ⚡ 買屋賣屋・行情諮詢・委託找房 歡迎直接私訊！
-#買房 #成家 #換屋 #新青安 #好房推薦`;
+#買房 #成家 #物件資訊`;
 
+  // 2. 591 / 樂屋網 規格版 (清楚、專業、條理化、符合房仲公會審核風格)
   const portalCopy = `【${title}】
 
 【基本資料】
@@ -227,18 +228,17 @@ ${tagListStr || '✅ 屋況極佳 免大整理
 ・所在樓層：${floor}
 
 【物件亮點】
-${allTags.map((t, idx) => `${idx+1}. ${t}`).join('
-') || '1. 格局方正，採光佳通風良好
-2. 生活機能成熟便利'}
+${allTags.map((t, idx) => `${idx+1}. ${t}`).join('\n') || '特色未提供，歡迎洽詢'}
 
 【經紀人貼心提醒】
-現場看屋感受最準確，歡迎提前預約帶看，為您提供最完整的產權調查與周邊成交行情分析！
+價格、坪數、產權與現況請核對相關資料，歡迎洽詢看屋安排。
 
 預約賞屋請洽：${agent}
 賞屋專線：${contact}`;
 
+  // 3. LINE 私訊推坑版 (口語、像朋友報好康、無壓力)
   const lineCopy = `哥/姐您好！我是 ${agent} 😊
-跟您分享一間今天剛接到的好案子，第一時間先傳給您參考：
+跟您分享一筆物件資訊，供您參考：
 
 🏠【${title}】
 ・開價：${priceStr}
@@ -246,64 +246,93 @@ ${allTags.map((t, idx) => `${idx+1}. ${t}`).join('
 ・樓層：${floor}
 
 💡 重點特色：
-${allTags.slice(0, 3).map(t => `👉 ${t}`).join('
-') || '👉 屋況超好，地段無可挑剔'}
+${allTags.slice(0, 3).map(t => `👉 ${t}`).join('\n') || '👉 特色未提供，歡迎洽詢'}
 
-這間採光跟動線真的很漂亮，屋主也很客氣好談，我覺得很適合您的需求！
+是否符合您的需求，建議確認資料並現場看屋。
 這兩天您有空嗎？我帶您現場走走感受一下，不喜歡也沒關係當作看行情！
 可以直接加我電話或私訊約時間喔：${contact}`;
 
+  // 4. IG / 小紅書吸睛版 (文青短句、Hashtags、視覺感)
   const igCopy = `✨ 找到屬於你的理想生活提案 🏠
 
 「回家的路上，連風都是溫柔的。」
-今天帶看這間【${title}】真的被驚豔到！
+本次物件分享：【${title}】
 
 總價｜${priceStr}
 空間｜${layout}・${ping}・${floor}
 亮點｜
-${allTags.slice(0, 4).map(t => `▫️ ${t}`).join('
-') || '▫️ 陽光灑落的大客廳
-▫️ 步行可達的便利日常'}
+${allTags.slice(0, 4).map(t => `▫️ ${t}`).join('\n') || '▫️ 特色未提供，歡迎洽詢'}
 
 有時候買房買的不是坪數，而是每天下班後真正能放鬆的自己。
-想看完整開箱影片或現場感受嗎？
+想了解更多物件資訊或洽詢看屋安排嗎？
 
 歡迎小盒子私訊 📥
 專案諮詢｜${agent}（${contact}）
 .
-#房地產 #買房筆記 #看房日記 #首購族 #我的神仙房子`;
+.
+#房地產 #買房筆記 #看房日記 #裝潢靈感 #首購族 #我的神仙房子`;
 
   copies = [fbCopy, portalCopy, lineCopy, igCopy];
+
   document.getElementById('resultCard').style.display = 'block';
   switchTab(currentTabIndex);
+  
+  // 平滑滾動到結果
   document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
 }
 
 function switchTab(index) {
+  copyRequest++;
+  document.getElementById('copyStatus').textContent = '';
   currentTabIndex = index;
   document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
     btn.classList.toggle('active', idx === index);
   });
   document.getElementById('outputText').textContent = copies[index] || '';
+  
   const copyBtn = document.getElementById('copyBtn');
   copyBtn.innerHTML = '📋 複製此文案';
   copyBtn.classList.remove('copied');
 }
 
-function copyResult() {
-  const text =f (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    co document.getElementById('outputText').textContent;
-  inst btn = document.getElementById('copyBtn');
-    btn.innerHTML = '✅ 已複製到剪貼簿！';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.innerHTML = '📋 複製此文案';
-      btn.classList.remove('copied');
-    }, 2000);
-  });
+async function copyResult() {
+  const text = document.getElementById('outputText').textContent;
+  if (!text) return;
+  const request = ++copyRequest;
+  let copied = false;
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  } catch (_) { /* Permission denied: try the legacy fallback. */ }
+  if (!copied) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+    const previousFocus = document.activeElement;
+    document.body.appendChild(textarea);
+    try {
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, text.length);
+      copied = typeof document.execCommand === 'function' && document.execCommand('copy') === true;
+    } catch (_) { copied = false; }
+    finally {
+      textarea.remove();
+      if (previousFocus && previousFocus.focus) previousFocus.focus();
+    }
+  }
+  // A delayed clipboard response must not label a different tab as copied.
+  if (request !== copyRequest) return;
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = copied ? '✅ 已複製到剪貼簿！' : '📋 重試複製';
+  btn.classList.toggle('copied', copied);
+  document.getElementById('copyStatus').textContent = copied
+    ? '已複製目前文案。'
+    : '無法自動複製；請長按上方文案選取文字，或以滑鼠選取後手動複製。';
 }
 </script>
 </body>
 </html>
-                                                       
