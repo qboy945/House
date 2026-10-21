@@ -2,7 +2,7 @@
    原始著作：Qboy945（LINE ID: Qboywang）
    來源識別碼：YLT-QBOY945-2026-10-21-A7F3C1
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v5-2026-10-21-sourcemark';
+var VERSION = 'v6-2026-10-21-newicon';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [
@@ -10,7 +10,9 @@ var ASSETS = [
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', function (e) {
