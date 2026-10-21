@@ -1,6 +1,6 @@
-/* 房仲出圖 PWA — 離線快取
+/* 緣來喝茶房仲APP — 離線快取
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v2-2026-10-21-rename';
+var VERSION = 'v3-2026-10-21-fixmanifest';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [
@@ -33,6 +33,19 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+// 只查目前版本的快取，絕不跨舊快取讀取
+function fromCurrentCache(req) {
+  return caches.open(CACHE).then(function (c) {
+    return c.match(req);
+  });
+}
+
+function putCurrentCache(req, res) {
+  return caches.open(CACHE).then(function (c) {
+    return c.put(req, res);
+  });
+}
+
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
@@ -40,30 +53,41 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // 導覽請求：先走網路，失敗才用快取（確保拿到新版）
-  if (req.mode === 'navigate') {
+  var isManifest = url.pathname.indexOf('manifest.json') !== -1;
+  var isSw = url.pathname.indexOf('sw.js') !== -1;
+
+  // sw.js 一律走網路，避免服務程式本身被舊快取卡住
+  if (isSw) {
+    e.respondWith(fetch(req).catch(function () { return fromCurrentCache(req); }));
+    return;
+  }
+
+  // 導覽請求與 manifest：先走網路，確保名稱與版本即時更新
+  if (req.mode === 'navigate' || isManifest) {
     e.respondWith(
       fetch(req).then(function (res) {
-        var copy = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        if (res && res.status === 200) {
+          var copy = res.clone();
+          putCurrentCache(req, copy).catch(function () {});
+        }
         return res;
       }).catch(function () {
-        return caches.match(req).then(function (hit) {
-          return hit || caches.match('./index.html');
+        return fromCurrentCache(req).then(function (hit) {
+          return hit || (req.mode === 'navigate' ? fromCurrentCache('./index.html') : undefined);
         });
       })
     );
     return;
   }
 
-  // 其他資源：先看快取，沒有才走網路
+  // 其他資源（圖示等）：先看目前版本的快取，沒有才走網路
   e.respondWith(
-    caches.match(req).then(function (hit) {
+    fromCurrentCache(req).then(function (hit) {
       if (hit) return hit;
       return fetch(req).then(function (res) {
         if (res && res.status === 200 && res.type === 'basic') {
           var copy = res.clone();
-          caches.open(CACHE).then(function (c) { c.put(req, copy); });
+          putCurrentCache(req, copy).catch(function () {});
         }
         return res;
       });
