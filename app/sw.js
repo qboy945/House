@@ -2,7 +2,7 @@
    原始著作：Qboy945（LINE ID: Qboywang）
    來源識別碼：YLT-QBOY945-2026-10-21-A7F3C1
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v6-2026-10-21-newicon';
+var VERSION = 'v7-2026-10-21-browserhint';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [

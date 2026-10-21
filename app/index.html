@@ -79,10 +79,20 @@
     background:#06c755;color:#fff;font-size:13.5px;font-weight:800;padding:10px 16px;border-radius:24px;
     white-space:nowrap}
   .askbar a:active{opacity:.85}
+  /* 內建瀏覽器 / 非 Safari 提示 */
+  .browserhint{display:none;margin:0 0 14px;padding:13px 15px;border-radius:13px;
+    background:#fffbeb;border:1.5px solid #fcd34d;color:#78350f;font-size:13px;line-height:1.65}
+  .browserhint.show{display:block}
+  .browserhint b{display:block;font-size:13.5px;margin-bottom:5px;color:#92400e}
+  .browserhint ol{margin:7px 0 0;padding-left:19px}
+  .browserhint li{margin-bottom:3px}
+  .browserhint .close{float:right;margin:-4px -4px 0 8px;border:none;background:none;
+    font-size:18px;line-height:1;color:#b45309;cursor:pointer;padding:2px 5px}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="browserhint" id="browserHint"></div>
   <header>
     <h1>🏠 緣來喝茶房仲APP</h1>
     <p class="sub">填一次資料 → 產出社群圖卡 + FB／591／LINE／IG 四平台文案<br>照片與資料只在本機處理，不上傳任何伺服器，不使用 AI 生成圖片</p>
@@ -534,6 +544,52 @@
   window.fillDemo=fillDemo;
   window.applyPreset=applyPreset;
   window.syncPreset=syncPreset;
+})();
+</script>
+<script>
+/* 偵測內建瀏覽器 / 非 Safari：iPhone 只能在 Safari 加入主畫面 */
+(function(){
+  var el = document.getElementById('browserHint');
+  if (!el) return;
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isLINE = /\bLine\//i.test(ua);
+  var isFB = /FBAN|FBAV|Instagram/i.test(ua);
+  var isChromeIOS = /CriOS/i.test(ua);
+  var isEdgeIOS = /EdgiOS/i.test(ua);
+  var isFirefoxIOS = /FxiOS/i.test(ua);
+  var standalone = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+  function show(html){
+    el.innerHTML = '<button class="close" aria-label="關閉">×</button>' + html;
+    el.classList.add('show');
+    var btn = el.querySelector('.close');
+    if (btn) btn.onclick = function(){ el.classList.remove('show'); };
+  }
+
+  if (standalone) return;   // 已經用桌面版開了，不用提示
+
+  if (isIOS && (isLINE || isFB)) {
+    show('<b>建議用 Safari 開啟</b>' +
+      '你現在用的是「' + (isLINE ? 'LINE' : 'Facebook／Instagram') + '」內建瀏覽器，' +
+      '<u>沒辦法把這個工具加到手機桌面</u>。' +
+      '<ol><li>點畫面右上角的 <b>⋯</b> 或分享圖示</li>' +
+      '<li>選「<b>在 Safari 中開啟</b>」</li>' +
+      '<li>到 Safari 後點下方 <b>分享</b> → 「加入主畫面」</li></ol>' +
+      '不安裝也能直接用，功能完全一樣。');
+    return;
+  }
+
+  if (isIOS && (isChromeIOS || isEdgeIOS || isFirefoxIOS)) {
+    var nm = isChromeIOS ? 'Chrome' : (isEdgeIOS ? 'Edge' : 'Firefox');
+    show('<b>iPhone 請用 Safari 安裝</b>' +
+      '你現在用的是 ' + nm + '，iOS 上只有 Safari 能「加入主畫面」。' +
+      '<ol><li>複製這個網址</li>' +
+      '<li>用 <b>Safari</b> 貼上開啟</li>' +
+      '<li>點下方 <b>分享</b> → 「加入主畫面」</li></ol>' +
+      '不安裝也能直接用，功能完全一樣。');
+  }
 })();
 </script>
 <script>
