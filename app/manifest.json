@@ -1,6 +1,6 @@
 {
-  "name": "房仲一鍵出圖＋文案",
-  "short_name": "房仲出圖",
+  "name": "緣來喝茶房仲APP",
+  "short_name": "緣來喝茶",
   "description": "上傳房屋照片套版產生社群圖卡，同時產出 FB／591／LINE／IG 四平台文案。純本機處理，不使用 AI 生成圖片。",
   "lang": "zh-Hant",
   "dir": "ltr",
@@ -10,7 +10,11 @@
   "orientation": "portrait",
   "background_color": "#f5f6f8",
   "theme_color": "#0f2440",
-  "categories": ["business", "productivity", "utilities"],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "./icon-192.png",

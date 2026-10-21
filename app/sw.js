@@ -1,6 +1,6 @@
 /* 房仲出圖 PWA — 離線快取
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v1-2026-10-21';
+var VERSION = 'v2-2026-10-21-rename';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [
