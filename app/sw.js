@@ -1,6 +1,8 @@
 /* 緣來喝茶房仲APP — 離線快取
+   原始著作：Qboy945（LINE ID: Qboywang）
+   來源識別碼：YLT-QBOY945-2026-10-21-A7F3C1
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v4-2026-10-21-linebar';
+var VERSION = 'v5-2026-10-21-sourcemark';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [
