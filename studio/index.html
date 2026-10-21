@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>房仲一鍵出圖＋文案</title>
+<style>
+  :root{--primary:#2563eb;--bg:#f5f6f8;--card:#fff;--text:#0f172a;--muted:#6b7280;--border:#e5e7eb;--ok:#16a34a}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:16px;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif}
+  .wrap{max-width:680px;margin:0 auto}
+  header{text-align:center;margin-bottom:16px}
+  h1{font-size:21px;margin:0 0 6px;font-weight:800}
+  .sub{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+  .group{margin-bottom:13px}
+  label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px;color:#374151}
+  input[type=text],input[type=tel],textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--border);
+    border-radius:10px;font-size:15px;outline:none;font-family:inherit;background:#fff}
+  textarea{resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--primary)}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  @media(max-width:520px){.g3{grid-template-columns:1fr}}
+  .drop{border:2px dashed #cbd5e1;border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;background:#fafbfc}
+  .drop:hover{border-color:var(--primary)}
+  .drop.has{border-style:solid;border-color:var(--ok);background:#f0fdf4;padding:8px}
+  .drop img{max-width:100%;max-height:170px;border-radius:8px;display:block;margin:0 auto}
+  .hint{font-size:13px;color:var(--muted)}
+  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .style-btn{border:2px solid var(--border);border-radius:10px;padding:8px 4px;background:#fff;
+    cursor:pointer;font-size:11.5px;font-weight:700;text-align:center;line-height:1.35}
+  .style-btn .chip{display:block;height:20px;border-radius:5px;margin-bottom:5px}
+  .style-btn.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .badge{border:1px solid var(--border);background:#f8fafc;padding:6px 12px;border-radius:20px;
+    font-size:12.5px;cursor:pointer;user-select:none}
+  .badge.on{background:#eff6ff;border-color:var(--primary);color:var(--primary);font-weight:700}
+  .btn{width:100%;background:var(--primary);color:#fff;border:none;padding:14px;border-radius:12px;
+    font-size:15.5px;font-weight:700;cursor:pointer}
+  .btn2{width:100%;background:#0f172a;color:#fff;border:none;padding:13px;border-radius:12px;
+    font-size:14.5px;font-weight:700;cursor:pointer;margin-top:8px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+  .tab{flex:1;min-width:70px;text-align:center;padding:10px 6px;background:#e2e8f0;border:none;
+    border-radius:10px;font-size:12.5px;font-weight:700;color:#475569;cursor:pointer;white-space:nowrap}
+  .tab.active{background:#1e293b;color:#fff}
+  canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--border)}
+  .out-text{white-space:pre-wrap;font-size:14px;line-height:1.65;margin:0;word-break:break-word;
+    background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:16px;min-height:200px}
+  .msg{font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px;min-height:18px}
+  .note{font-size:11.5px;color:#9ca3af;line-height:1.7;margin-top:10px}
+  .demo{text-align:right;margin-bottom:8px}
+  .demo a{color:var(--primary);font-size:12px;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏠 房仲一鍵出圖＋文案</h1>
+    <p class="sub">填一次資料 → 產出社群圖卡 + FB／591／LINE／IG 四平台文案<br>照片與資料只在本機處理，不上傳任何伺服器，不使用 AI 生成圖片</p>
+  </header>
+
+  <div class="card">
+    <div class="demo"><a onclick="fillDemo()">⚡ 帶入示範物件</a></div>
+
+    <div class="group">
+      <label>1. 房屋照片（只給圖卡用；不傳照片也能只產文案）</label>
+      <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+        <div class="hint" id="dropHint">點此選照片，或拖曳進來</div>
+      </div>
+      <input type="file" id="file" accept="image/*" style="display:none">
+    </div>
+
+    <div class="group">
+      <label>2. 圖卡版型</label>
+      <div class="styles" id="styles"></div>
+    </div>
+
+    <div class="group">
+      <label>3. 標籤（同時用於圖卡與文案，只勾已確認的事實）</label>
+      <div class="badges" id="badges"></div>
+    </div>
+
+    <div class="g2">
+      <div class="group"><label>社區 / 地段</label><input type="text" id="title" placeholder="例：新巨蛋 近府中捷運"></div>
+      <div class="group"><label>開價（萬）</label><input type="text" id="price" placeholder="例：2380"></div>
+    </div>
+    <div class="g3">
+      <div class="group"><label>格局</label>
+        <select id="layoutPreset" onchange="applyPreset()" style="margin-bottom:6px">
+          <option value="">常用格局</option>
+          <option>套房</option><option>1房1廳1衛</option><option>2房1廳1衛</option>
+          <option>2房2廳1衛</option><option>3房2廳2衛</option><option>4房2廳2衛</option>
+          <option value="custom">自行輸入</option>
+        </select>
+        <input type="text" id="layout" placeholder="2房2廳1衛" oninput="syncPreset()">
+      </div>
+      <div class="group"><label>總建坪</label><input type="text" id="ping" placeholder="28.6坪"></div>
+      <div class="group"><label>樓層</label><input type="text" id="floor" placeholder="18F/46F"></div>
+    </div>
+    <div class="group"><label>其他特色（選填）</label><textarea id="features" rows="2" placeholder="例：坡道平面車位、近學區"></textarea></div>
+    <div class="g2">
+      <div class="group"><label>經紀人</label><input type="text" id="agent" placeholder="永慶小陳"></div>
+      <div class="group"><label>電話 / LINE</label><input type="tel" id="contact" placeholder="0912-345-678"></div>
+    </div>
+
+    <button class="btn" onclick="build()">✨ 一鍵產出圖卡＋四平台文案</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card" id="out" style="display:none">
+    <div class="tabs" id="tabs">
+      <button class="tab active" onclick="switchTab(0)">🖼 圖卡</button>
+      <button class="tab" onclick="switchTab(1)">🔥 FB</button>
+      <button class="tab" onclick="switchTab(2)">📋 591</button>
+      <button class="tab" onclick="switchTab(3)">💬 LINE</button>
+      <button class="tab" onclick="switchTab(4)">📸 IG</button>
+    </div>
+
+    <div id="paneCard">
+      <canvas id="card" width="1080" height="1350"></canvas>
+      <button class="btn2" onclick="download()">⬇️ 下載圖卡 PNG</button>
+    </div>
+
+    <div id="paneText" style="display:none">
+      <pre class="out-text" id="outText"></pre>
+      <button class="btn2" id="copyBtn" onclick="copyText()">📋 複製文案</button>
+      <p class="msg" id="copyStatus"></p>
+    </div>
+
+    <p class="note">照片與文字皆由你自行提供；刊登前請核對價格、坪數、樓層與產權資料是否正確。</p>
+  </div>
+</div>
+<script>
+(function(){
+  var W=1080,H=1350,PHOTO_H=810;
+  var FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC","Helvetica Neue",Arial,sans-serif';
+
+  var STYLES=[
+    {id:'navy',name:'典雅深藍',panel:'#0f2440',accent:'#c9a227',title:'#ffffff',sub:'#9fb3cc',price:'#c9a227',line:'rgba(255,255,255,.14)',agent:'#e8eef7',foot:'rgba(255,255,255,.32)',badgeInk:'#0f2440'},
+    {id:'white',name:'雜誌白',panel:'#ffffff',accent:'#111827',title:'#111827',sub:'#6b7280',price:'#111827',line:'#e5e7eb',agent:'#111827',foot:'#b0b7c3',badgeInk:'#ffffff'},
+    {id:'gold',name:'促銷金',panel:'#7f1d1d',accent:'#fbbf24',title:'#ffffff',sub:'#fecaca',price:'#fbbf24',line:'rgba(255,255,255,.18)',agent:'#ffffff',foot:'rgba(255,255,255,.35)',badgeInk:'#7f1d1d'},
+    {id:'sand',name:'簡約米',panel:'#f3efe7',accent:'#7c5c3e',title:'#3f3222',sub:'#8a7a66',price:'#7c5c3e',line:'#ddd5c7',agent:'#3f3222',foot:'#b9ae9d',badgeInk:'#f3efe7'}
+  ];
+
+  var BADGES=['新上架','降價','稀有釋出','屋主急售','可看屋',
+    '捷運共構','景觀採光','精美裝潢','近學區','附車位'];
+
+  var state={style:0,badges:[],img:null,tab:0,copies:[]};
+  var $=function(id){return document.getElementById(id);};
+  function trim(v,fb){v=(v||'').trim();return v||fb;}
+
+  /* ---------- controls ---------- */
+  var stylesEl=$('styles');
+  STYLES.forEach(function(s,i){
+    var b=document.createElement('div');
+    b.className='style-btn'+(i===0?' active':'');
+    b.innerHTML='<span class="chip" style="background:'+s.panel+';border:1px solid '+s.line+'"></span>'+s.name;
+    b.onclick=function(){
+      state.style=i;
+      Array.prototype.forEach.call(stylesEl.children,function(c,j){c.classList.toggle('active',j===i);});
+      if(state.img&&state.tab===0) renderCard();
+    };
+    stylesEl.appendChild(b);
+  });
+
+  var badgesEl=$('badges');
+  BADGES.forEach(function(name){
+    var b=document.createElement('div');
+    b.className='badge';b.textContent=name;
+    b.onclick=function(){toggleBadge(name,b);};
+    badgesEl.appendChild(b);
+  });
+  function toggleBadge(name,el){
+    var i=state.badges.indexOf(name);
+    if(i>=0)state.badges.splice(i,1);else state.badges.push(name);
+    el.classList.toggle('on');
+    if(state.img&&state.tab===0) renderCard();
+  }
+
+  var drop=$('drop'),file=$('file');
+  function loadFile(f){
+    if(!f||f.type.indexOf('image/')!==0){msg('請選擇圖片檔');return;}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        state.img=img;
+        drop.classList.add('has');
+        drop.innerHTML='';
+        var t=new Image();t.src=e.target.result;drop.appendChild(t);
+        msg('照片已載入');
+        if(state.tab===0) renderCard();
+      };
+      img.onerror=function(){msg('這張照片讀取失敗，換一張');};
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(f);
+  }
+  drop.addEventListener('dragover',function(e){e.preventDefault();drop.style.borderColor='#2563eb';});
+  drop.addEventListener('dragleave',function(){drop.style.borderColor='';});
+  drop.addEventListener('drop',function(e){
+    e.preventDefault();drop.style.borderColor='';
+    if(e.dataTransfer.files&&e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);
+  });
+  file.addEventListener('change',function(){if(file.files[0])loadFile(file.files[0]);});
+  function msg(t){$('msg').textContent=t||'';}
+
+  function applyPreset(){
+    var p=$('layoutPreset').value;
+    if(p&&p!=='custom')$('layout').value=p;
+  }
+  function syncPreset(){
+    var p=$('layoutPreset'),v=$('layout').value.trim();
+    p.value=!v?'':Array.from(p.options).some(function(o){
+      return o.value!=='custom'&&o.value===v;})?v:'custom';
+  }
+
+  /* ---------- canvas helpers ---------- */
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+  }
+  function drawCover(ctx,img,x,y,w,h){
+    var ir=img.width/img.height,br=w/h,sx,sy,sw,sh;
+    if(ir>br){sh=img.height;sw=sh*br;sx=(img.width-sw)/2;sy=0;}
+    else{sw=img.width;sh=sw/br;sx=0;sy=(img.height-sh)/2;}
+    ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+  }
+  function fitFont(ctx,text,maxW,start,min,weight){
+    var size=start;
+    while(size>min){
+      ctx.font=weight+' '+size+'px '+FONT;
+      if(ctx.measureText(text).width<=maxW)break;
+      size-=2;
+    }
+    ctx.font=weight+' '+size+'px '+FONT;
+    return size;
+  }
+  function wrap(ctx,text,maxW){
+    var lines=[],line='';
+    for(var i=0;i<text.length;i++){
+      var test=line+text[i];
+      if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=text[i];}
+      else line=test;
+    }
+    if(line)lines.push(line);
+    return lines;
+  }
+  function ellipsize(ctx,text,maxW){
+    if(ctx.measureText(text).width<=maxW)return text;
+    var t=text;
+    while(t.length&&ctx.measureText(t+'…').width>maxW)t=t.slice(0,-1);
+    return t+'…';
+  }
+  function drawTitle(ctx,text,x,maxW,singleBase,l1,l2,color){
+    var sizes=[56,52,48,44,40,36],i;
+    for(i=0;i<sizes.length;i++){
+      ctx.font='700 '+sizes[i]+'px '+FONT;
+      if(ctx.measureText(text).width<=maxW){
+        ctx.fillStyle=color;ctx.fillText(text,x,singleBase+(56-sizes[i])/2);return;
+      }
+    }
+    for(i=0;i<sizes.length;i++){
+      var sz=sizes[i];
+      ctx.font='700 '+sz+'px '+FONT;
+      var lines=wrap(ctx,text,maxW);
+      if(lines.length<=2){
+        ctx.fillStyle=color;
+        ctx.fillText(lines[0],x,l1+(56-sz)/2);
+        if(lines[1])ctx.fillText(lines[1],x,l2+(56-sz)/2);
+        return;
+      }
+    }
+    var s2=sizes[sizes.length-1];
+    ctx.font='700 '+s2+'px '+FONT;
+    var ll=wrap(ctx,text,maxW);
+    ctx.fillStyle=color;
+    ctx.fillText(ll[0],x,l1);
+    ctx.fillText(ellipsize(ctx,ll.slice(1).join(''),maxW),x,l2);
+  }
+
+  function readForm(){
+    return {
+      title:trim($('title').value,'物件名稱未填'),
+      price:($('price').value||'').trim(),
+      layout:($('layout').value||'').trim(),
+      ping:($('ping').value||'').trim(),
+      floor:($('floor').value||'').trim(),
+      features:($('features').value||'').trim(),
+      agent:trim($('agent').value,'聯絡人未提供'),
+      contact:trim($('contact').value,'聯絡方式未提供，請補填'),
+      tags:state.badges.slice()
+    };
+  }
+
+  /* ---------- card ---------- */
+  function renderCard(){
+    if(!state.img){msg('請先上傳一張房屋照片');return false;}
+    var f=readForm(),s=STYLES[state.style];
+    var c=$('card'),ctx=c.getContext('2d');
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle=s.panel;ctx.fillRect(0,0,W,H);
+    drawCover(ctx,state.img,0,0,W,PHOTO_H);
+
+    var fade=ctx.createLinearGradient(0,PHOTO_H-180,0,PHOTO_H);
+    fade.addColorStop(0,'rgba(0,0,0,0)');fade.addColorStop(1,'rgba(0,0,0,.35)');
+    ctx.fillStyle=fade;ctx.fillRect(0,PHOTO_H-180,W,180);
+
+    ctx.fillStyle=s.accent;ctx.fillRect(0,PHOTO_H,W,6);
+
+    if(f.tags.length){
+      var bx=44,by=44;
+      ctx.textBaseline='middle';
+      f.tags.slice(0,4).forEach(function(name){
+        ctx.font='700 28px '+FONT;
+        var tw=ctx.measureText(name).width,pw=tw+44,ph=58;
+        if(bx+pw>W-44){bx=44;by+=ph+12;}
+        ctx.fillStyle=s.accent;roundRect(ctx,bx,by,pw,ph,29);ctx.fill();
+        ctx.fillStyle=s.badgeInk;ctx.textAlign='center';
+        ctx.fillText(name,bx+pw/2,by+ph/2+1);
+        bx+=pw+12;
+      });
+      ctx.textAlign='left';
+    }
+
+    var PX=64,MAXW=W-PX*2;
+    ctx.textBaseline='alphabetic';
+    drawTitle(ctx,f.title,PX,MAXW,930,902,964,s.title);
+
+    var specs=[f.layout,f.ping,f.floor].filter(Boolean).join('　·　');
+    if(specs){
+      ctx.fillStyle=s.sub;fitFont(ctx,specs,MAXW,34,22,'400');
+      ctx.fillText(specs,PX,1042);
+    }
+    if(f.price){
+      var pt=f.price.replace(/[萬万]\s*$/,'')+' 萬';
+      ctx.fillStyle=s.price;fitFont(ctx,pt,MAXW-20,96,48,'800');
+      ctx.fillText(pt,PX,1136);
+      ctx.fillStyle=s.sub;ctx.font='400 26px '+FONT;
+      ctx.fillText('開價',PX,1174);
+    }
+
+    ctx.strokeStyle=s.line;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(PX,1214);ctx.lineTo(W-PX,1214);ctx.stroke();
+
+    ctx.fillStyle=s.agent;
+    fitFont(ctx,f.agent,MAXW*0.5,32,20,'700');
+    ctx.textAlign='left';ctx.fillText(f.agent,PX,1262);
+    fitFont(ctx,f.contact,MAXW*0.5,32,20,'600');
+    ctx.textAlign='right';ctx.fillText(f.contact,W-PX,1262);
+    ctx.textAlign='left';
+
+    ctx.fillStyle=s.foot;ctx.font='400 20px '+FONT;
+    ctx.fillText('實際坪數、價格與屋況請以現場及權狀資料為準',PX,1312);
+    return true;
+  }
+
+  function download(){
+    var c=$('card');
+    var name=trim($('title').value,'物件').replace(/[\\/:*?"<>|\s]+/g,'_');
+    c.toBlob(function(blob){
+      if(!blob){msg('下載失敗，請再按一次');return;}
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='房卡_'+name+'_'+STYLES[state.style].name+'.png';
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+      msg('已下載');
+    },'image/png');
+  }
+
+  /* ---------- copy ---------- */
+  function makeCopies(f){
+    var priceStr=f.price?f.price.replace(/[萬万]\s*$/,'')+' 萬':'未提供，歡迎洽詢';
+    var allTags=f.tags.slice();
+    if(f.features)allTags.push(f.features);
+    var bullet=allTags.map(function(t){return '✅ '+t;}).join('\n');
+    var numbered=allTags.map(function(t,i){return (i+1)+'. '+t;}).join('\n');
+
+    var fb='🏠【物件資訊分享】\n━━━━━━━━━━━━━━━━━━━━━\n'+
+      '📍 物件名稱：'+f.title+'\n💰 開價：'+priceStr+'\n'+
+      '📐 權狀坪數：'+(f.ping||'未提供')+'\n🛏 格局規劃：'+(f.layout||'未提供')+'\n'+
+      '🏢 樓層位置：'+(f.floor||'未提供')+'\n\n【為什麼這間值得你親自來看？】\n'+
+      (bullet||'特色未提供，歡迎洽詢')+
+      '\n\n想進一步了解物件條件，歡迎洽詢並預約現場確認。\n'+
+      '━━━━━━━━━━━━━━━━━━━━━\n📲 預約帶看專線：'+f.contact+'\n👤 服務經紀人：'+f.agent+
+      '\n⚡ 買屋賣屋・行情諮詢・委託找房 歡迎直接私訊！\n#買房 #成家 #物件資訊';
+
+    var portal='【'+f.title+'】\n\n【基本資料】\n・總價：'+priceStr+'\n・建物格局：'+
+      (f.layout||'未提供')+'\n・建物登記：'+(f.ping||'未提供')+'\n・所在樓層：'+
+      (f.floor||'未提供')+'\n\n【物件亮點】\n'+(numbered||'特色未提供，歡迎洽詢')+
+      '\n\n【經紀人貼心提醒】\n價格、坪數、產權與現況請核對相關資料，歡迎洽詢看屋安排。\n\n'+
+      '預約賞屋請洽：'+f.agent+'\n賞屋專線：'+f.contact;
+
+    var line='哥/姐您好！我是 '+f.agent+' 😊\n跟您分享一筆物件資訊，供您參考：\n\n'+
+      '🏠【'+f.title+'】\n・開價：'+priceStr+'\n・格局：'+(f.layout||'未提供')+
+      '（'+(f.ping||'未提供')+'）\n・樓層：'+(f.floor||'未提供')+'\n\n💡 重點特色：\n'+
+      (allTags.slice(0,3).map(function(t){return '👉 '+t;}).join('\n')||'👉 特色未提供，歡迎洽詢')+
+      '\n\n是否符合您的需求，建議確認資料並現場看屋。\n'+
+      '這兩天您有空嗎？我帶您現場走走感受一下，不喜歡也沒關係當作看行情！\n'+
+      '可以直接加我電話或私訊約時間喔：'+f.contact;
+
+    var ig='✨ 找到屬於你的理想生活提案 🏠\n\n「回家的路上，連風都是溫柔的。」\n本次物件分享：【'+
+      f.title+'】\n\n總價｜'+priceStr+'\n空間｜'+(f.layout||'未提供')+'・'+(f.ping||'未提供')+
+      '・'+(f.floor||'未提供')+'\n亮點｜\n'+
+      (allTags.slice(0,4).map(function(t){return '▫️ '+t;}).join('\n')||'▫️ 特色未提供，歡迎洽詢')+
+      '\n\n有時候買房買的不是坪數，而是每天下班後真正能放鬆的自己。\n想了解更多物件資訊或洽詢看屋安排嗎？\n\n'+
+      '歡迎小盒子私訊 📥\n專案諮詢｜'+f.agent+'（'+f.contact+'）\n.\n.\n'+
+      '#房地產 #買房筆記 #看房日記 #裝潢靈感 #首購族 #我的神仙房子';
+
+    return [fb,portal,line,ig];
+  }
+
+  /* ---------- main ---------- */
+  function build(){
+    var f=readForm();
+    state.copies=makeCopies(f);
+
+    if(state.img){
+      renderCard();
+    }
+    $('out').style.display='block';
+    switchTab(state.tab);
+    $('out').scrollIntoView({behavior:'smooth'});
+    msg(state.img?'圖卡與文案已產出':'已完成文案（未上傳照片，故無圖卡）');
+  }
+
+  function switchTab(i){
+    state.tab=i;
+    Array.prototype.forEach.call($('tabs').children,function(b,j){
+      b.classList.toggle('active',j===i);
+    });
+    var isCard=(i===0);
+    $('paneCard').style.display=isCard?'block':'none';
+    $('paneText').style.display=isCard?'none':'block';
+    if(isCard){
+      if(state.img) renderCard(); else msg('未上傳照片，圖卡無法產出');
+    }else{
+      $('outText').textContent=state.copies[i-1]||'';
+      $('copyBtn').textContent='📋 複製文案';
+      $('copyBtn').classList.remove('copied');
+      $('copyStatus').textContent='';
+      msg('');
+    }
+  }
+
+  function copyText(){
+    var text=$('outText').textContent;
+    if(!text)return;
+    var btn=$('copyBtn'),st=$('copyStatus');
+    function done(ok){
+      btn.textContent=ok?'✅ 已複製':'📋 重試複製';
+      st.textContent=ok?'已複製目前文案。':'無法自動複製；請長按上方文字選取。';
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){done(true);},function(){fallback();});
+    }else fallback();
+    function fallback(){
+      var ta=document.createElement('textarea');
+      ta.value=text;ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+      document.body.appendChild(ta);
+      var ok=false;
+      try{ta.focus();ta.select();ta.setSelectionRange(0,text.length);
+        ok=document.execCommand&&document.execCommand('copy')===true;}catch(e){ok=false;}
+      ta.remove();done(ok);
+    }
+  }
+
+  function fillDemo(){
+    $('title').value='新巨蛋 近府中捷運';
+    $('price').value='2380';
+    $('layout').value='2房2廳1衛';syncPreset();
+    $('ping').value='28.6坪';
+    $('floor').value='18F/46F';
+    $('features').value='坡道平面車位、近學區';
+    $('agent').value='永慶小陳';
+    $('contact').value='0912-345-678';
+    state.badges=[];
+    Array.prototype.forEach.call(badgesEl.children,function(b){b.classList.remove('on');});
+    msg('示範資料已填入，記得先上傳一張照片');
+  }
+
+  window.build=build;
+  window.download=download;
+  window.switchTab=switchTab;
+  window.copyText=copyText;
+  window.fillDemo=fillDemo;
+  window.applyPreset=applyPreset;
+  window.syncPreset=syncPreset;
+})();
+</script>
+</body>
+</html>
