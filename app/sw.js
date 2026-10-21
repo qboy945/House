@@ -1,6 +1,6 @@
 /* 緣來喝茶房仲APP — 離線快取
    改版時請更新 VERSION，否則客戶手機會一直用舊版。 */
-var VERSION = 'v3-2026-10-21-fixmanifest';
+var VERSION = 'v4-2026-10-21-linebar';
 var CACHE = 'realtor-app-' + VERSION;
 
 var ASSETS = [
